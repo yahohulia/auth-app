@@ -1,0 +1,79 @@
+services:
+  auth-db:
+    image: postgres:16-alpine
+    container_name: auth-db
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_DATABASE:-postgres}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    networks:
+      - auth-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_DATABASE:-postgres}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: auth-backend
+    env_file:
+      - .env
+    ports:
+      - "${PORT:-4000}:4000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      DB_HOST: auth-db
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_DATABASE: ${DB_DATABASE:-postgres}
+      PORT: ${PORT:-4000}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    networks:
+      - auth-network
+    command: npm run start:dev
+
+  auth-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: auth-frontend
+    env_file:
+      - .env
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      VITE_API_URL: http://localhost:4000
+      VITE_PROXY_TARGET: http://auth-backend:4000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - auth-backend
+    networks:
+      - auth-network
+    command: npm run dev
+
+networks:
+  auth-network:
+    driver: bridge
+
+volumes:
+  auth-db-data:
