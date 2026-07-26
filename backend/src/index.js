@@ -8,6 +8,7 @@ import { profileRouter } from './routes/profile.route.js';
 import { ApiError } from './exeptions/api.error.js';
 import { oauthRouter } from './routes/oauth.route.js';
 import passport from './utils/passport.js';
+import { client } from './utils/db.js';
 
 const PORT = process.env.PORT || 3005;
 
@@ -33,6 +34,8 @@ app.use((req, res, next) => {
 });
 
 app.use(errorMiddleware);
+
+await client.sync();
 
 app.listen(PORT, '0.0.0.0', () => {
   // eslint-disable-next-line
