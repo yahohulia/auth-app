@@ -32,6 +32,8 @@ oauthRouter.get(
     res.cookie('refreshToken', refreshToken, {
       maxAge: TTL,
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     });
 
     res.redirect(
@@ -68,6 +70,8 @@ oauthRouter.get(
     res.cookie('refreshToken', refreshToken, {
       maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     });
 
     res.redirect(accessTokenURL);

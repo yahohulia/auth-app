@@ -1,5 +1,6 @@
 import express from 'express';
 import { authController } from '../controllers/auth.controller.js';
+import { profileController } from '../controllers/profile.controller.js';
 import { catchError } from '../utils/catchError.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 
@@ -20,4 +21,9 @@ authRouter.post('/reset-password', catchError(authController.resetPassword));
 authRouter.post(
   '/reset-password/:confirmToken',
   catchError(authController.confirmResetPassword),
+);
+
+authRouter.get(
+  '/change-email/:confirmToken',
+  catchError(profileController.confirmEmail),
 );

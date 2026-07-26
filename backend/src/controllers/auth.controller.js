@@ -74,8 +74,6 @@ const activate = async (req, res) => {
   await user.save();
 
   await generateTokens(res, user);
-
-  res.redirect(process.env.CLIENT_HOST + '/profile');
 };
 
 const login = async (req, res, next) => {
@@ -111,8 +109,6 @@ const login = async (req, res, next) => {
   }
 
   await generateTokens(res, user);
-
-  res.redirect(process.env.CLIENT_HOST + '/profile');
 };
 
 const logout = async (req, res, next) => {
@@ -125,8 +121,8 @@ const logout = async (req, res, next) => {
   }
 
   await tokenService.remove(userData.id);
-
-  res.redirect(process.env.CLIENT_HOST + '/login');
+  res.clearCookie('refreshToken');
+  res.sendStatus(204);
 };
 
 const refresh = async (req, res, next) => {
@@ -141,7 +137,7 @@ const refresh = async (req, res, next) => {
 
   const user = await userService.findByEmail(userData.email);
 
-  generateTokens(res, user);
+  await generateTokens(res, user);
 };
 
 export const generateTokens = async (res, user) => {
@@ -154,7 +150,9 @@ export const generateTokens = async (res, user) => {
 
   res.cookie('refreshToken', refreshAccessToken, {
     maxAge: 30 * 24 * 60 * 60 * 1000,
-    HttpOnly: true,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   });
 
   res.send({

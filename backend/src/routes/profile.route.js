@@ -19,12 +19,6 @@ profileRouter.post(
   catchError(profileController.changeEmail),
 );
 
-profileRouter.get(
-  '/change-email/:confirmToken',
-  authMiddleware,
-  catchError(profileController.confirmEmail),
-);
-
 profileRouter.post(
   '/change-password',
   authMiddleware,
