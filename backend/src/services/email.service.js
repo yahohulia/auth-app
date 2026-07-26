@@ -18,9 +18,15 @@ const transporter = !resend
 
 const FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
-function send({ email, subject, html }) {
+async function send({ email, subject, html }) {
   if (resend) {
-    return resend.emails.send({ from: FROM, to: email, subject, html });
+    const { error } = await resend.emails.send({ from: FROM, to: email, subject, html });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return;
   }
 
   return transporter.sendMail({ to: email, subject, html });
