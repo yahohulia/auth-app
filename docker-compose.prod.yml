@@ -1,0 +1,60 @@
+services:
+  auth-db:
+    image: postgres:16-alpine
+    container_name: auth-db
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    networks:
+      - auth-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  auth-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: auth-backend
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DB_HOST: auth-db
+      DB_PORT: 5432
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    networks:
+      - auth-network
+    restart: unless-stopped
+
+  auth-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: auth-frontend
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      - auth-backend
+    networks:
+      - auth-network
+    restart: unless-stopped
+
+networks:
+  auth-network:
+    driver: bridge
+
+volumes:
+  auth-db-data:
