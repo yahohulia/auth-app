@@ -1,78 +1,66 @@
-import 'dotenv/config';
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
-export function send({ email, subject, html }) {
-  return transporter.sendMail({
-    to: email,
-    subject,
-    html,
-  });
+const transporter = !resend
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    })
+  : null;
+
+const FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+
+function send({ email, subject, html }) {
+  if (resend) {
+    return resend.emails.send({ from: FROM, to: email, subject, html });
+  }
+
+  return transporter.sendMail({ to: email, subject, html });
 }
 
 function sendActivationEmail(email, token) {
   const href = `${process.env.CLIENT_HOST}/activation/${token}`;
 
-  const html = `
-  <h1>Activate account</h1>
-  <a href="${href}">${href}</a>
-  `;
-
   return send({
     email,
-    html,
-    subject: 'Activate',
+    subject: 'Activate your account',
+    html: `<h1>Activate account</h1><a href="${href}">${href}</a>`,
   });
 }
 
 function sendConfirmEmail(email, token) {
   const href = `${process.env.CLIENT_HOST}/change-email/${token}`;
 
-  const html = `
-  <h1>Confirm changing Email</h1>
-  <a href="${href}">${href}</a>
-  `;
-
   return send({
     email,
-    html,
-    subject: 'Changing Email address',
+    subject: 'Confirm email change',
+    html: `<h1>Confirm changing Email</h1><a href="${href}">${href}</a>`,
   });
 }
 
 function sendEmailChanged(oldEmail, newEmail) {
-  const html = `
-  <h1>Your email has been succesfull changed!</h1>
-  <h2>Email changed from ${oldEmail} to ${newEmail}</h2>
-  `;
-
   return send({
     email: oldEmail,
-    html,
-    subject: 'Email been changed',
+    subject: 'Your email has been changed',
+    html: `<h1>Email changed</h1><p>Your email was changed from ${oldEmail} to ${newEmail}.</p>`,
   });
 }
 
 function sendResetPassword(email, token) {
   const href = `${process.env.CLIENT_HOST}/reset-password/${token}`;
 
-  const html = `
-  <h1>Confirm password changing</h1>
-  <a href="${href}">${href}</a>
-  `;
-
   return send({
     email,
-    html,
-    subject: 'Password changing',
+    subject: 'Reset your password',
+    html: `<h1>Reset password</h1><a href="${href}">${href}</a>`,
   });
 }
 
