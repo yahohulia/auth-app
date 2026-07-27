@@ -11,7 +11,7 @@
 
 ## 🚀 Live Demo
 
-Not deployed yet - currently runs via Docker Compose locally. A hosted version is planned.
+👉 [Auth App](https://auth-app-theta-eight.vercel.app/)
 
 ## 🏅 Features
 
