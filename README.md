@@ -11,7 +11,7 @@
 
 ## 🚀 Live Demo
 
-👉 [![Auth App](https://img.shields.io/badge/live-demo-brightgreen?style=for-the-badge)](https://auth-app-theta-eight.vercel.app/)
+👉 [Auth App](https://auth-app-theta-eight.vercel.app/)
 
 ## 🏅 Features
 
